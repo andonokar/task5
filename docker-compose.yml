@@ -1,0 +1,31 @@
+version: '2'
+
+networks:
+  app-tier:
+    driver: bridge
+
+services:
+  postgres:
+    image: andonokar/task5-postgres
+    restart: always
+    networks:
+      - app-tier
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: admin
+      PGDATA: /var/lib/postgresql/data/pgdata
+      POSTGRES_PASSWORD: example
+    volumes:
+      - /Users/anderson.lima/IdeaProjects/volumes/postgres:/var/lib/postgresql/data/pgdata # replace with you own persistence path
+
+
+
+#  task4:
+#    image: andonokar/task4
+#    restart: always
+#    networks:
+#      - app-tier
+#    depends_on:
+#      postgres:
+#        condition: service_completed_successfully
