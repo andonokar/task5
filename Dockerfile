@@ -32,7 +32,7 @@ RUN echo "shared_preload_libraries = 'task5'" >> /var/lib/postgresql/data/postgr
 RUN echo "cron.database_name = '${PG_CRON_DB:-pg_cron}'" >> /var/lib/postgresql/data/postgresql.conf
 
 COPY ./docker-entrypoint.sh /usr/local/bin/
-
+COPY ./main/data.sql /docker-entrypoint-initdb.d/data.sql
 RUN chmod a+x /usr/local/bin/docker-entrypoint.sh
 
 ENTRYPOINT ["docker-entrypoint.sh"]
