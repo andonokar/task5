@@ -1,5 +1,3 @@
-CREATE extension pg_cron;
-
 CREATE TABLE bronze (
                         id SERIAL PRIMARY KEY,
                         user_id bigint,
