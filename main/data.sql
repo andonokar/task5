@@ -174,30 +174,30 @@ BEGIN
              )
         -- Creating the final table based on the business rule and the temporary tables created
         SELECT ec.advertiser,
-               ec.click_count / ec.impression_count AS CTR,
-               ec.conversion_count / ec.impression_count AS conversion_rate,
-               ec.conversion_count / ec.click_count AS conversion_click_rate,
-               gender_counts.male_count / gender_counts.female_count AS male_female_rate,
+               ec.click_count / NULLIF(ec.impression_count, -1) AS CTR,
+               ec.conversion_count / NULLIF(ec.impression_count, -1) AS conversion_rate,
+               ec.conversion_count / NULLIF(ec.click_count, -1) AS conversion_click_rate,
+               gender_counts.male_count / NULLIF(gender_counts.female_count, -1) AS male_female_rate,
                income_counts.income_25k_50k_count / NULLIF(
                        income_counts.income_25k_below_count + income_counts.income_25k_below_count +
                        income_counts.income_50k_75k_count + income_counts.income_75k_99k_count +
-                       income_counts.income_100k_above_count, 0) AS income_25k_50k_rate,
+                       income_counts.income_100k_above_count, -1) AS income_25k_50k_rate,
                income_counts.income_25k_below_count / NULLIF(
                        income_counts.income_25k_below_count + income_counts.income_25k_50k_count +
                        income_counts.income_50k_75k_count + income_counts.income_75k_99k_count +
-                       income_counts.income_100k_above_count, 0) AS income_25k_below_rate,
+                       income_counts.income_100k_above_count, -1) AS income_25k_below_rate,
                income_counts.income_50k_75k_count / NULLIF(
                        income_counts.income_50k_75k_count + income_counts.income_25k_below_count +
                        income_counts.income_25k_50k_count + income_counts.income_75k_99k_count +
-                       income_counts.income_100k_above_count, 0) AS income_50k_75k_rate,
+                       income_counts.income_100k_above_count, -1) AS income_50k_75k_rate,
                income_counts.income_75k_99k_count / NULLIF(
                        income_counts.income_75k_99k_count + income_counts.income_25k_below_count +
                        income_counts.income_25k_50k_count + income_counts.income_50k_75k_count +
-                       income_counts.income_100k_above_count, 0) AS income_75k_99k_rate,
+                       income_counts.income_100k_above_count, -1) AS income_75k_99k_rate,
                income_counts.income_100k_above_count / NULLIF(
                        income_counts.income_75k_99k_count + income_counts.income_25k_below_count +
                        income_counts.income_25k_50k_count + income_counts.income_50k_75k_count +
-                       income_counts.income_100k_above_count, 0) AS income_100k_above_rate,
+                       income_counts.income_100k_above_count, -1) AS income_100k_above_rate,
                location_max.city_most_engaged AS city_most_engaged,
                campaign_max.campaign_most_engaged AS campaign_most_engaged,
                CURRENT_TIMESTAMP AS agg_time
