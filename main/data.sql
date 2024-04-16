@@ -1,3 +1,4 @@
+-- creating bronze, silvers and gold tables
 CREATE TABLE bronze (
                         id SERIAL PRIMARY KEY,
                         user_id bigint,
@@ -56,17 +57,20 @@ CREATE TABLE gold (
                       campaign_most_engaged varchar(255),
                       agg_time timestamp
 );
-
+-- creating function that process bronze table and insert into silver
 CREATE OR REPLACE FUNCTION bronze_processing()
+    -- void because the function itself doesn't return anything
     RETURNS VOID AS $$
 DECLARE
+    -- variable which will be used in the function
     event RECORD;
 BEGIN
     -- Loop through records in the bronze table where processed is false
     FOR event IN
+        -- Selecting only not processed data
         SELECT * FROM bronze WHERE processed = FALSE
         LOOP
-            -- Check if the gender is unknown
+            -- Check business rules
             IF event.gender = 'unknown' OR event.region = 'undefined' OR event.income = 'unknown' THEN
                 -- Insert the record into the wrong table
                 INSERT INTO silver_nok (id, user_id, event_name, advertiser, campaign, gender, income,
@@ -89,17 +93,23 @@ BEGIN
         END LOOP;
 END
 $$ LANGUAGE plpgsql;
-
+-- creating function that process silver table and insert into gold
 CREATE OR REPLACE FUNCTION silver_processing()
+    -- void because the function itself doesn't return anything
     RETURNS VOID AS $$
 DECLARE
+    -- variable which will be used in the function
     adv RECORD;
 BEGIN
+    -- clearing the gold table to process everything
     TRUNCATE TABLE gold;
+    -- Loop through the advertisers resulted in this complex query
     FOR adv in
+        -- Selecting all silver table
         WITH silver_to_process AS (
             SELECT * FROM silver
         ),
+            -- Creating a table with the count of the impressions, clicks, conversions per advertiser
              event_counts AS (
                  SELECT advertiser,
                         CAST(COUNT(CASE WHEN event_name = 'Click' THEN 1 END) AS FLOAT) AS click_count,
@@ -109,6 +119,7 @@ BEGIN
                  FROM silver_to_process
                  GROUP BY advertiser
              ),
+            -- Creating a table with count of male and female per advertiser
              gender_counts AS (
                  SELECT advertiser,
                         CAST(COUNT(CASE WHEN gender = 'Male' THEN 1 END) AS FLOAT) AS male_count,
@@ -116,6 +127,7 @@ BEGIN
                  FROM silver_to_process
                  GROUP BY advertiser
              ),
+            -- Creating a table with count of different incomes per advertiser
              income_counts AS (
                  SELECT advertiser,
                         CAST(COUNT(CASE WHEN income = '25k and below' THEN 1 END) AS FLOAT) AS income_25k_below_count,
@@ -126,6 +138,7 @@ BEGIN
                  FROM silver_to_process
                  GROUP BY advertiser
              ),
+            -- Creating a table with the best engaged city per advertiser
              location_max AS (
                  SELECT advertiser,
                         MAX(location) AS city_most_engaged
@@ -142,6 +155,7 @@ BEGIN
                  WHERE rn = 1
                  GROUP BY advertiser
              ),
+             -- Creating a table with the best engaged city per advertiser
              campaign_max AS (
                  SELECT advertiser,
                         MAX(campaign) AS campaign_most_engaged
@@ -158,6 +172,7 @@ BEGIN
                  WHERE rn = 1
                  GROUP BY advertiser
              )
+        -- Creating the final table based on the business rule and the temporary tables created
         SELECT ec.advertiser,
                ec.click_count / ec.impression_count AS CTR,
                ec.conversion_count / ec.impression_count AS conversion_rate,
@@ -202,11 +217,11 @@ BEGIN
 
 END
 $$ LANGUAGE plpgsql;
-
+-- Creating a cron for the bronze processing - each 10 minutes
 SELECT cron.schedule('*/10 * * * *', $$
     SELECT bronze_processing()
 $$);
-
+-- Creating a cron for silver processing - every 10 hours
 SELECT cron.schedule('0 * * * *', $$
     SELECT silver_processing()
 $$);

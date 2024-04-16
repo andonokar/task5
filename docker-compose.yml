@@ -21,11 +21,10 @@ services:
 
 
 
-#  task4:
-#    image: andonokar/task4
-#    restart: always
-#    networks:
-#      - app-tier
-#    depends_on:
-#      postgres:
-#        condition: service_completed_successfully
+  task5:
+    image: andonokar/task5-spark
+    restart: no
+    networks:
+      - app-tier
+    depends_on:
+      - postgres

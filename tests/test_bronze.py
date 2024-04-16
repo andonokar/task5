@@ -3,7 +3,7 @@ from pyspark.sql import SparkSession
 from pyspark.sql import types as t
 from pyspark.sql import functions as f
 import base64
-from sparkingest import bronze
+from sparkingest import __main__ as bronze
 
 
 class BronzeTest(unittest.TestCase):
